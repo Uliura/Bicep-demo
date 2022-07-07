@@ -41,10 +41,6 @@ module app 'modules/app.bicep' = [for value in values: {
   params: {
     appServicePlanId: appPlan.outputs.appServicePlanId
     appServiceAppName: '${appServiceAppName}-${value}'
-    sqlServerAdministratorLogin: sqlServerAdministratorLogin
-    sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
-    sqlServerName: '${sqlServerName}${value}'
-    sqlDatabaseName: sqlDatabaseName
     location: location
   }
 }]
@@ -70,7 +66,7 @@ module sqldb 'modules/sqldb.bicep' = [for value in values: {
   ]
  }] 
 
-module storageAcc 'modules/storage.bicep' = {
+ module storageAcc 'modules/storage.bicep' = {
   name: 'storageDeploy'
   params: {
     location: location
@@ -87,3 +83,29 @@ module keyVault 'modules/keyvault.bicep' = {
   }
 }
 
+resource webapp 'Microsoft.Web/sites@2022-03-01' existing = [for value in values: {
+  name: '${appServiceAppName}-${value}'
+ }]
+
+ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
+  name: storageAccountName
+ }
+
+ resource kVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
+  name: keyVaultName
+
+ }
+ 
+ resource connectionstrings 'Microsoft.Web/sites/config@2022-03-01' = [for (value, i) in values:{
+  parent: webapp[i]
+  name: 'connectionstrings'
+  properties: {
+    SqlConnection: {
+      type: 'SQLAzure'
+      value: 'Server=tcp:${sqlServerName}${value}${environment().suffixes.sqlServerHostname},1433;Database=${sqlDatabaseName};User ID=${sqlServerAdministratorLogin};Password=${sqlServerAdministratorLoginPassword}'
+    }
+  }
+  dependsOn: [
+    app
+  ]
+}]
