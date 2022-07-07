@@ -23,7 +23,6 @@ var storageAccountName = 'gekabicepstorage'
 
 
 
-
 module app 'modules/app.bicep' = {
   name: 'appDeploy'
   params: {
@@ -54,5 +53,4 @@ module storageAcc 'modules/storage.bicep' = {
 }
 
 
-@description('The host name to use to access the website.')
-output websiteHostName string = app.outputs.appServiceAppHostName
+
