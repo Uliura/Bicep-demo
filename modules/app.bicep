@@ -20,4 +20,3 @@ resource appServiceApp 'Microsoft.Web/sites@2022-03-01' = {
 
 }
 
-output appId string = appServiceApp.id

@@ -28,3 +28,4 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
     tenantId: subscription().tenantId
   }
 }
+

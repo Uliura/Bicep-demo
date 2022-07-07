@@ -18,14 +18,12 @@ param values array = [
   'Back'
 ]
 
-
-
 // Define the names for resources.
-var appServiceAppName = 'gekabicepapp'
-var appServicePlanName = 'gekabicepappplan'
-var sqlServerName = 'gekabicepsql'
-var sqlDatabaseName = 'gekabicepsqldb'
-var storageAccountName = 'gekabicepstorage'
+var appServiceAppName = 'app-bicepdemo'
+var appServicePlanName = 'bicepdemoappplan'
+var sqlServerName = 'sql-bicepdemo'
+var sqlDatabaseName = 'sqldb-bicepdemo'
+var storageAccountName = 'stbicepdemo001'
 var keyVaultName = 'gekaBicepDemoKeyVault'
 
 module appPlan 'modules/appplan.bicep' = {
@@ -51,7 +49,7 @@ module sqlserver 'modules/sqlserver.bicep' = [for value in values: {
     location: location
     sqlServerAdministratorLogin: sqlServerAdministratorLogin
     sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
-    sqlServerName: '${sqlServerName}${value}'
+    sqlServerName: '${sqlServerName}-${value}'
   }
 }]
 
@@ -66,7 +64,7 @@ module sqldb 'modules/sqldb.bicep' = [for value in values: {
   ]
  }] 
 
- module storageAcc 'modules/storage.bicep' = {
+module storageAcc 'modules/storage.bicep' = {
   name: 'storageDeploy'
   params: {
     location: location
@@ -87,16 +85,16 @@ resource webapp 'Microsoft.Web/sites@2022-03-01' existing = [for value in values
   name: '${appServiceAppName}-${value}'
  }]
 
- resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
   name: storageAccountName
- }
+}
 
- resource kVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
+resource kVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
   name: keyVaultName
 
- }
+}
 
- resource connectionstrings 'Microsoft.Web/sites/config@2022-03-01' = [for (value, i) in values:{
+resource connectionstrings 'Microsoft.Web/sites/config@2022-03-01' = [for (value, i) in values:{
   parent: webapp[i]
   name: 'connectionstrings'
   properties: {
