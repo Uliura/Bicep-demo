@@ -56,7 +56,7 @@ module sqlserver 'modules/sqlserver.bicep' = [for value in values: {
 module sqldb 'modules/sqldb.bicep' = [for value in values: {
   name: 'databaseDeploy${value}'
   params: {
-    sqlDatabaseName: '${sqlServerName}${value}/${sqlDatabaseName}'
+    sqlDatabaseName: '${sqlServerName}-${value}/${sqlDatabaseName}'
     location: location
   }
   dependsOn: [
