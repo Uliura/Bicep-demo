@@ -95,7 +95,7 @@ resource webapp 'Microsoft.Web/sites@2022-03-01' existing = [for value in values
   name: keyVaultName
 
  }
- 
+
  resource connectionstrings 'Microsoft.Web/sites/config@2022-03-01' = [for (value, i) in values:{
   parent: webapp[i]
   name: 'connectionstrings'
@@ -106,6 +106,31 @@ resource webapp 'Microsoft.Web/sites@2022-03-01' existing = [for value in values
     }
   }
   dependsOn: [
+    keyVault
     app
   ]
 }]
+
+resource sqlSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = [for value in values:  {
+  parent: kVault
+  name: 'SqlConnectString${value}'
+  properties: {
+    value: 'Server=tcp:${sqlServerName}${value}${environment().suffixes.sqlServerHostname},1433;Database=${sqlDatabaseName};User ID=${sqlServerAdministratorLogin};Password=${sqlServerAdministratorLoginPassword}'
+  }
+  dependsOn: [
+    keyVault
+    sqldb
+  ]
+}]
+
+resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
+  parent: kVault
+  name: 'storageSecretKey'
+  properties: {
+    value: storageAccount.listKeys().keys[0].value
+  }
+  dependsOn: [
+    keyVault
+    storageAcc
+  ]
+}
