@@ -13,8 +13,8 @@ param sqlServerAdministratorLogin string
 param sqlServerAdministratorLoginPassword string
 
 
-param appCount int = 2
-param dbCount int = 2
+param appCount int = 0
+param dbCount int = 0
 
 
 // Define the names for resources.
@@ -66,3 +66,4 @@ module keyVault 'modules/keyvault.bicep' = {
     keyvaultName: keyVaultName
   }
 }
+

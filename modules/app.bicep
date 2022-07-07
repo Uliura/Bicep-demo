@@ -15,7 +15,7 @@ param appCount int
 
 param tags object = {}
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = if (appCount > 0) {
   name: appServicePlanName
   location: location
   tags: tags
