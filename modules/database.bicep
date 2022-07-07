@@ -15,27 +15,32 @@ param sqlDatabaseSku object = {
   tier: 'Standard'
 }
 
+param tags object = {}
+
 @description('The name of the SQL logical server.')
 param sqlServerName string
 
 @description('The name of the SQL Database.')
 param sqlDatabaseName string
 
+@description('The amount of the SQL logical server.')
+param dbCount int
 
-resource sqlServer 'Microsoft.Sql/servers@2021-11-01-preview' = {
-  name: sqlServerName
+resource sqlServer 'Microsoft.Sql/servers@2021-11-01-preview' = [for i in range(1, dbCount): {
+  name: '${sqlServerName}${i}'
   location: location
+  tags: tags
   properties: {
     administratorLogin: sqlServerAdministratorLogin
     administratorLoginPassword: sqlServerAdministratorLoginPassword
   }
-}
+}]
 
-resource sqlDatabase 'Microsoft.Sql/servers/databases@2021-11-01-preview' = {
-  parent: sqlServer
+resource sqlDatabase 'Microsoft.Sql/servers/databases@2021-11-01-preview' = [for i in range(0, dbCount): {
+  parent: sqlServer[i]
   name: sqlDatabaseName
   location: location
   sku: sqlDatabaseSku
-}
+}]
 
 

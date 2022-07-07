@@ -11,19 +11,23 @@ param appServicePlanName string
 param appServicePlanSkuName string
 
 @description('The amount of the App Service app.')
-param appCount int = 2
+param appCount int
+
+param tags object = {}
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: appServicePlanName
   location: location
+  tags: tags
   sku: {
     name: appServicePlanSkuName
   }
 }
 
-resource appServiceApp 'Microsoft.Web/sites@2022-03-01' =  [for i in range(0, appCount): {
+resource appServiceApp 'Microsoft.Web/sites@2022-03-01' =  [for i in range(1, appCount): {
   name: '${appServiceAppName}${i}'
   location: location
+  tags: tags
   properties: {
     serverFarmId: appServicePlan.id
   }

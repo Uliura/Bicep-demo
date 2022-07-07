@@ -13,6 +13,9 @@ param sqlServerAdministratorLogin string
 param sqlServerAdministratorLoginPassword string
 
 
+param appCount int = 2
+param dbCount int = 2
+
 
 // Define the names for resources.
 var appServiceAppName = 'gekabicepapp'
@@ -20,6 +23,7 @@ var appServicePlanName = 'gekabicepappplan'
 var sqlServerName = 'gekabicepsql'
 var sqlDatabaseName = 'gekabicepsqldb'
 var storageAccountName = 'gekabicepstorage'
+var keyVaultName = 'gekaBicepDemoKeyVault'
 
 
 
@@ -30,6 +34,7 @@ module app 'modules/app.bicep' = {
     appServicePlanName: appServicePlanName
     appServicePlanSkuName: appServicePlanSkuName
     location: location
+    appCount: appCount
   }
 }
 
@@ -41,6 +46,7 @@ module databases 'modules/database.bicep' =  {
     sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
     sqlDatabaseName: sqlServerName
     sqlServerName: sqlDatabaseName
+    dbCount: dbCount
   }
 }
 
@@ -53,4 +59,10 @@ module storageAcc 'modules/storage.bicep' = {
 }
 
 
-
+module keyVault 'modules/keyvault.bicep' = {
+  name: 'keyVaultDeploy'
+  params: {
+    location: location
+    keyvaultName: keyVaultName
+  }
+}
