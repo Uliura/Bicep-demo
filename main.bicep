@@ -13,12 +13,11 @@ param sqlServerAdministratorLogin string
 param sqlServerAdministratorLoginPassword string
 
 
-param appNames array = [
-  'front'
-  'back'
+param values array = [
+  'Front'
+  'Back'
 ]
 
-param dbCount int = 2
 
 
 // Define the names for resources.
@@ -37,32 +36,39 @@ module appPlan 'modules/appplan.bicep' = {
     location: location
   }
 }
-module app 'modules/app.bicep' = [for name in appNames: {
-  name: 'appDeploy${name}'
+module app 'modules/app.bicep' = [for value in values: {
+  name: 'appDeploy${value}'
   params: {
     appServicePlanId: appPlan.outputs.appServicePlanId
-    appServiceAppName: '${appServiceAppName}-${name}'
+    appServiceAppName: '${appServiceAppName}-${value}'
+    sqlServerAdministratorLogin: sqlServerAdministratorLogin
+    sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
+    sqlServerName: '${sqlServerName}${value}'
+    sqlDatabaseName: sqlDatabaseName
     location: location
   }
 }]
 
-module sqlserver 'modules/sqlserver.bicep' = [for i in range(1, dbCount): {
-  name: 'sqlserverDeploy${i}'
+module sqlserver 'modules/sqlserver.bicep' = [for value in values: {
+  name: 'sqlserverDeploy${value}'
   params: {
     location: location
     sqlServerAdministratorLogin: sqlServerAdministratorLogin
     sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
-    sqlServerName: '${sqlServerName}${i}'
+    sqlServerName: '${sqlServerName}${value}'
   }
 }]
 
-module sqldb 'modules/sqldb.bicep' = {
-  name: 'databaseDeploy'
+module sqldb 'modules/sqldb.bicep' = [for value in values: {
+  name: 'databaseDeploy${value}'
   params: {
-    sqlDatabaseName: sqlDatabaseName
+    sqlDatabaseName: '${sqlServerName}${value}/${sqlDatabaseName}'
     location: location
-  }  
-} 
+  }
+  dependsOn: [
+    sqlserver
+  ]
+ }] 
 
 module storageAcc 'modules/storage.bicep' = {
   name: 'storageDeploy'
