@@ -13,8 +13,12 @@ param sqlServerAdministratorLogin string
 param sqlServerAdministratorLoginPassword string
 
 
-param appCount int = 0
-param dbCount int = 0
+param appNames array = [
+  'front'
+  'back'
+]
+
+param dbCount int = 2
 
 
 // Define the names for resources.
@@ -25,30 +29,40 @@ var sqlDatabaseName = 'gekabicepsqldb'
 var storageAccountName = 'gekabicepstorage'
 var keyVaultName = 'gekaBicepDemoKeyVault'
 
-
-
-module app 'modules/app.bicep' = {
-  name: 'appDeploy'
+module appPlan 'modules/appplan.bicep' = {
+  name: 'appPlanDeploy'
   params: {
-    appServiceAppName: appServiceAppName
     appServicePlanName: appServicePlanName
     appServicePlanSkuName: appServicePlanSkuName
     location: location
-    appCount: appCount
   }
 }
+module app 'modules/app.bicep' = [for name in appNames: {
+  name: 'appDeploy${name}'
+  params: {
+    appServicePlanId: appPlan.outputs.appServicePlanId
+    appServiceAppName: '${appServiceAppName}-${name}'
+    location: location
+  }
+}]
 
-module databases 'modules/database.bicep' =  {
-  name: 'databaseDeploy'
+module sqlserver 'modules/sqlserver.bicep' = [for i in range(1, dbCount): {
+  name: 'sqlserverDeploy${i}'
   params: {
     location: location
     sqlServerAdministratorLogin: sqlServerAdministratorLogin
     sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
-    sqlDatabaseName: sqlServerName
-    sqlServerName: sqlDatabaseName
-    dbCount: dbCount
+    sqlServerName: '${sqlServerName}${i}'
   }
-}
+}]
+
+module sqldb 'modules/sqldb.bicep' = {
+  name: 'databaseDeploy'
+  params: {
+    sqlDatabaseName: sqlDatabaseName
+    location: location
+  }  
+} 
 
 module storageAcc 'modules/storage.bicep' = {
   name: 'storageDeploy'
