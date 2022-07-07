@@ -25,7 +25,7 @@ var storageAccountName = 'gekabicepstorage'
 
 
 module app 'modules/app.bicep' = {
-  name: 'toy-launch-app'
+  name: 'appDeploy'
   params: {
     appServiceAppName: appServiceAppName
     appServicePlanName: appServicePlanName
@@ -35,7 +35,7 @@ module app 'modules/app.bicep' = {
 }
 
 module databases 'modules/database.bicep' =  {
-  name: sqlServerName
+  name: 'databaseDeploy'
   params: {
     location: location
     sqlServerAdministratorLogin: sqlServerAdministratorLogin
@@ -46,7 +46,7 @@ module databases 'modules/database.bicep' =  {
 }
 
 module storageAcc 'modules/storage.bicep' = {
-  name: storageAccountName
+  name: 'storageDeploy'
   params: {
     location: location
     storageAccountName: storageAccountName
