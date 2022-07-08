@@ -7,7 +7,7 @@ trigger:
 - master
 
 pool:
-  vmImage: ubuntu-latest
+  name: fa
 
 steps:
 - script: echo Hello, world!
