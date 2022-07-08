@@ -10,6 +10,12 @@ pool:
   name: default
 
 steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'sc'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: 'az deployment group create --resource-group BicepGroup --template-file main.bicep'
 - task: AzureResourceManagerTemplateDeployment@3
   inputs:
     deploymentScope: 'Resource Group'
