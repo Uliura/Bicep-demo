@@ -15,4 +15,4 @@ steps:
     azureSubscription: 'sc'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
-    inlineScript: 'az deployment group create --resource-group BicepGroup --template-file main.bicep sqlServerAdministratorLogin=$(SQLSERVERADMINISTRATORLOGIN) sqlServerAdministratorLoginPassword=$(SQLSERVERADMINISTRATORLOGINPASSWORD)'
+    inlineScript: 'az deployment group create --resource-group BicepGroup --template-file main.bicep --parameters sqlServerAdministratorLogin=$(SQLSERVERADMINISTRATORLOGIN) sqlServerAdministratorLoginPassword=$(SQLSERVERADMINISTRATORLOGINPASSWORD)'
