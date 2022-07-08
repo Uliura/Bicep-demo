@@ -15,15 +15,4 @@ steps:
     azureSubscription: 'sc'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
-    inlineScript: 'az deployment group create --resource-group BicepGroup --template-file main.bicep'
-- task: AzureResourceManagerTemplateDeployment@3
-  inputs:
-    deploymentScope: 'Resource Group'
-    azureResourceManagerConnection: 'sc'
-    subscriptionId: '4be41c4d-d11d-4c4d-bd55-af4df78ba9b9'
-    action: 'Create Or Update Resource Group'
-    resourceGroupName: 'BicepGroup'
-    location: 'Central US'
-    templateLocation: 'Linked artifact'
-    csmFile: './main.bicep'
-    deploymentMode: 'Incremental'
+    inlineScript: 'az deployment group create --resource-group BicepGroup --template-file main.bicep sqlServerAdministratorLogin=$(SQLSERVERADMINISTRATORLOGIN) sqlServerAdministratorLoginPassword=$(SQLSERVERADMINISTRATORLOGINPASSWORD)'
