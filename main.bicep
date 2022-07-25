@@ -22,6 +22,15 @@ param firewallAdresses object = {
 @description('Deploy param for KeyVault')
 param deploy bool = true
 
+param vnetAddressPrefix string = '10.0.0.0/16'
+param subnet1Prefix string = '10.0.0.0/24'
+param subnet1Name string = 'frontEndSubnet'
+param subnet2Prefix string = '10.0.1.0/24'
+param subnet2Name string = 'middleSubnet'
+param subnet3Prefix string = '10.0.2.0/24'
+param subnet3Name string = 'backEndSubnet'
+param subnet4Prefix string = '10.0.3.0/24'
+param subnet4Name string = 'DMZSubnet'
 
 param projectName string = 'revolv'
 
@@ -39,6 +48,7 @@ var sqlServerName = 'sql-${projectName}${Environment}'
 var sqlDatabaseName = 'sqldb-${projectName}${Environment}'
 var storageAccountName = 'st${projectName}${Environment}003'
 var keyVaultName = 'kv${projectName}${Environment}002'
+var vnetName = 'vnet${projectName}${Environment}001'
 
 
 module appPlan 'modules/appplan.bicep' = {
@@ -108,6 +118,22 @@ module keyVault 'modules/keyvault.bicep' = if (deploy) {
   params: {
     location: location
     keyvaultName: keyVaultName
+  }
+}
+module vnet 'modules/vnet.bicep' = {
+  name: 'vnetDeploy'
+  params: {
+    location: location
+    vnetName: vnetName
+    vnetAddressPrefix: vnetAddressPrefix
+    subnet1Prefix: subnet1Prefix
+    subnet1Name: subnet1Name
+    subnet2Prefix: subnet2Prefix
+    subnet2Name: subnet2Name
+    subnet3Prefix: subnet3Prefix
+    subnet3Name: subnet3Name
+    subnet4Prefix: subnet4Prefix
+    subnet4Name: subnet4Name
   }
 }
 
