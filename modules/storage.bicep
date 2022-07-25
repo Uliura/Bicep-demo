@@ -2,11 +2,13 @@
 param location string = resourceGroup().location
 
 param tags object = {}
-
+@maxLength(24)
+@minLength(3)
 param storageAccountName string 
 
 param storageAccountSkuName string = 'Standard_LRS'
 
+param storageAcessTier string 
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   name: storageAccountName
@@ -17,7 +19,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    accessTier: 'Hot'
+    accessTier: storageAcessTier
   }
 }
 

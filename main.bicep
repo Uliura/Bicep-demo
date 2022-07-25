@@ -12,19 +12,34 @@ param sqlServerAdministratorLogin string
 @description('The administrator login password for the SQL server.')
 param sqlServerAdministratorLoginPassword string
 
+@description('The start and end IP address of the firewall rule. Must be IPv4 format. Use value 0.0.0.0 for all Azure-internal IP addresses.')
+param firewallAdresses object = {
+  endIpAddress: '0.0.0.0'
+  startIpAddress: '0.0.0.0'
+}
 
-param values array = [
-  'Front'
-  'Back'
-]
+
+@description('Deploy param for KeyVault')
+param deploy bool = true
+
+
+param projectName string = 'revolv'
+
+@allowed([
+  'prod'
+  'dev'
+])
+param Environment string = 'prod'
 
 // Define the names for resources.
-var appServiceAppName = 'app-bicepdemo'
-var appServicePlanName = 'bicepdemoappplan'
-var sqlServerName = 'sql-bicepdemo'
-var sqlDatabaseName = 'sqldb-bicepdemo'
-var storageAccountName = 'stbicepdemo001'
-var keyVaultName = 'gekaBicepDemoKeyVault'
+var staticAppName = 'appfrontend${projectName}${Environment}001'
+var appServiceAppName = 'app-backend-${projectName}${Environment}001'
+var appServicePlanName = 'plan${projectName}${Environment}'
+var sqlServerName = 'sql-${projectName}${Environment}'
+var sqlDatabaseName = 'sqldb-${projectName}${Environment}'
+var storageAccountName = 'st${projectName}${Environment}003'
+var keyVaultName = 'kv${projectName}${Environment}002'
+
 
 module appPlan 'modules/appplan.bicep' = {
   name: 'appPlanDeploy'
@@ -34,46 +49,61 @@ module appPlan 'modules/appplan.bicep' = {
     location: location
   }
 }
-module app 'modules/app.bicep' = [for value in values: {
-  name: 'appDeploy${value}'
+module app 'modules/app.bicep' = {
+  name: 'appDeploy'
   params: {
     appServicePlanId: appPlan.outputs.appServicePlanId
-    appServiceAppName: '${appServiceAppName}-${value}'
+    appServiceAppName: appServiceAppName
     location: location
+    connectionStringValue: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlDatabaseName};User Id=${sqlServerAdministratorLogin};Password=${sqlServerAdministratorLoginPassword};'
   }
-}]
+  dependsOn: [
+    sqldb
+  ]
+}
 
-module sqlserver 'modules/sqlserver.bicep' = [for value in values: {
-  name: 'sqlserverDeploy${value}'
+module sqlserver 'modules/sqlserver.bicep' = {
+  name: 'sqlserverDeploy'
   params: {
     location: location
     sqlServerAdministratorLogin: sqlServerAdministratorLogin
     sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
-    sqlServerName: '${sqlServerName}-${value}'
-  }
-}]
+    sqlServerName: sqlServerName
+    firewallAdresses : firewallAdresses
 
-module sqldb 'modules/sqldb.bicep' = [for value in values: {
-  name: 'databaseDeploy${value}'
+  }
+}
+
+module sqldb 'modules/sqldb.bicep' = {
+  name: 'databaseDeploy'
   params: {
-    sqlDatabaseName: '${sqlServerName}-${value}/${sqlDatabaseName}'
+    sqlDatabaseName: '${sqlServerName}/${sqlDatabaseName}'
     location: location
   }
   dependsOn: [
     sqlserver
   ]
- }] 
+ } 
 
 module storageAcc 'modules/storage.bicep' = {
   name: 'storageDeploy'
   params: {
     location: location
     storageAccountName: storageAccountName
+    storageAcessTier : (Environment == 'prod') ? 'Hot' : 'Cool'
   }
 }
 
+module staticApp 'modules/staticapp.bicep' = {
+  name: 'staticAppDeploy'
+  params: {
+    location: location
+    staticAppName: staticAppName
+  }
 
-module keyVault 'modules/keyvault.bicep' = {
+}
+
+module keyVault 'modules/keyvault.bicep' = if (deploy) {
   name: 'keyVaultDeploy'
   params: {
     location: location
@@ -81,54 +111,22 @@ module keyVault 'modules/keyvault.bicep' = {
   }
 }
 
-resource webapp 'Microsoft.Web/sites@2022-03-01' existing = [for value in values: {
-  name: '${appServiceAppName}-${value}'
- }]
-
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
-  name: storageAccountName
-}
-
-resource kVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
-  name: keyVaultName
-
-}
-
-resource connectionstrings 'Microsoft.Web/sites/config@2022-03-01' = [for (value, i) in values:{
-  parent: webapp[i]
-  name: 'connectionstrings'
-  properties: {
-    SqlConnection: {
-      type: 'SQLAzure'
-      value: 'Server=tcp:${sqlServerName}${value}${environment().suffixes.sqlServerHostname},1433;Database=${sqlDatabaseName};User ID=${sqlServerAdministratorLogin};Password=${sqlServerAdministratorLoginPassword}'
-    }
-  }
-  dependsOn: [
-    keyVault
-    app
-  ]
-}]
-
-resource sqlSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = [for value in values:  {
-  parent: kVault
-  name: 'SqlConnectString${value}'
-  properties: {
-    value: 'Server=tcp:${sqlServerName}${value}${environment().suffixes.sqlServerHostname},1433;Database=${sqlDatabaseName};User ID=${sqlServerAdministratorLogin};Password=${sqlServerAdministratorLoginPassword}'
-  }
-  dependsOn: [
-    keyVault
-    sqldb
-  ]
-}]
-
-resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
-  parent: kVault
-  name: 'storageSecretKey'
-  properties: {
-    value: storageAccount.listKeys().keys[0].value
+module secrets 'modules/secrets.bicep' = {
+  name: 'secretDeploy'
+  params: {
+    keyvaultName: keyVaultName
+    sqlDatabaseName: sqlDatabaseName
+    sqlServerAdministratorLogin: sqlServerAdministratorLogin
+    sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
+    sqlServerName: sqlServerName
+    storageAccountName: storageAccountName
   }
   dependsOn: [
     keyVault
     storageAcc
-  ]
+    sqldb
+    app
+  ]  
 }
+
+

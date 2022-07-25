@@ -7,7 +7,6 @@ param tags object = {}
 @description('The name of the Key Vault')
 param keyvaultName string
 
-
 resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
   name: keyvaultName
   location: location
@@ -17,7 +16,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: true
-    enableSoftDelete: true
+    enableSoftDelete: false
     enableRbacAuthorization: true
     enablePurgeProtection: true
     sku: {
