@@ -16,6 +16,8 @@ resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
     // The provider, repositoryUrl and branch fields are required for successive deployments to succeed
     // for more details see: https://github.com/Azure/static-web-apps/issues/516
     provider: 'Other'
+    repositoryUrl: ''
+    branch: ''
 
   }
 }
