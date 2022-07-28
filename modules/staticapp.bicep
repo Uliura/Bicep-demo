@@ -1,25 +1,22 @@
-@description('The Azure region into which the resources should be deployed.')
 param location string = resourceGroup().location
-param staticAppName string
-//param repositoryUrl string
-//param branch string
-//param repositoryToken string
-
+param skuName string = 'Free'
+param skuTier string = 'Free'
 param tags object = {}
+param staticAppName string
 
-resource name_resource 'Microsoft.Web/staticSites@2022-03-01' = {
-  name: staticAppName
+resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
+  name: staticAppName 
   location: location
   tags: tags
-  properties: {
-//    repositoryUrl: repositoryUrl
-//    branch: branch
-//    repositoryToken: repositoryToken
- }
-
   sku: {
-    tier: 'Standard'
-    name: 'Standard'
+    name: skuName
+    tier: skuTier
+  }
+  properties: {
+    // The provider, repositoryUrl and branch fields are required for successive deployments to succeed
+    // for more details see: https://github.com/Azure/static-web-apps/issues/516
+    provider: 'Other'
+
   }
 }
 

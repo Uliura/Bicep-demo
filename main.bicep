@@ -18,19 +18,11 @@ param firewallAdresses object = {
   startIpAddress: '0.0.0.0'
 }
 
-
 @description('Deploy param for KeyVault')
 param deploy bool = true
 
+@description('Address prefix')
 param vnetAddressPrefix string = '10.0.0.0/16'
-param subnet1Prefix string = '10.0.0.0/24'
-param subnet1Name string = 'frontEndSubnet'
-param subnet2Prefix string = '10.0.1.0/24'
-param subnet2Name string = 'middleSubnet'
-param subnet3Prefix string = '10.0.2.0/24'
-param subnet3Name string = 'backEndSubnet'
-param subnet4Prefix string = '10.0.3.0/24'
-param subnet4Name string = 'DMZSubnet'
 
 param projectName string = 'revolv'
 
@@ -39,6 +31,19 @@ param projectName string = 'revolv'
   'dev'
 ])
 param Environment string = 'prod'
+
+param nsgValues object = {
+  nsg1:{
+    name: 'front'
+  }
+  nsg2:{
+    name: 'middle'
+  }
+  nsg3:{
+    name: 'back'
+  }
+}
+
 
 // Define the names for resources.
 var staticAppName = 'appfrontend${projectName}${Environment}001'
@@ -109,6 +114,7 @@ module staticApp 'modules/staticapp.bicep' = {
   params: {
     location: location
     staticAppName: staticAppName
+
   }
 
 }
@@ -126,16 +132,16 @@ module vnet 'modules/vnet.bicep' = {
     location: location
     vnetName: vnetName
     vnetAddressPrefix: vnetAddressPrefix
-    subnet1Prefix: subnet1Prefix
-    subnet1Name: subnet1Name
-    subnet2Prefix: subnet2Prefix
-    subnet2Name: subnet2Name
-    subnet3Prefix: subnet3Prefix
-    subnet3Name: subnet3Name
-    subnet4Prefix: subnet4Prefix
-    subnet4Name: subnet4Name
   }
 }
+
+module nsg 'modules/nsg.bicep' = [for nsg in items(nsgValues): {
+  name: 'deploy${nsg.value.name}'
+  params: {
+    nsgName: nsg.value.name
+    location: location
+  }
+}]
 
 module secrets 'modules/secrets.bicep' = {
   name: 'secretDeploy'
@@ -146,6 +152,7 @@ module secrets 'modules/secrets.bicep' = {
     sqlServerAdministratorLoginPassword: sqlServerAdministratorLoginPassword
     sqlServerName: sqlServerName
     storageAccountName: storageAccountName
+    staticAppName: staticAppName
   }
   dependsOn: [
     keyVault

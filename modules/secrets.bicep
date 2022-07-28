@@ -11,7 +11,7 @@ param sqlDatabaseName string
 param storageAccountName string 
 param keyvaultName string
 param sqlServerName string
-
+param staticAppName string
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
   name: storageAccountName
@@ -21,6 +21,9 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
   name: keyvaultName
 }
 
+resource staticApp 'Microsoft.Web/staticSites@2022-03-01' existing = {
+  name: staticAppName
+}
 
 resource sqlSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' =  {
   parent: keyVault
@@ -31,7 +34,7 @@ resource sqlSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' =  {
 
 }
 
-resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = { 
+resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2021-04-01-preview' = { 
   parent: keyVault
   name: 'storageSecretKey'
   properties: {
@@ -39,3 +42,10 @@ resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = 
   }
 }
 
+resource staticAppToken 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = { 
+  parent: keyVault
+  name: 'staticAppToken'
+  properties: {
+    value: staticApp.listSecrets().properties.apiKey
+  }
+}
